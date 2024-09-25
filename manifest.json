@@ -1,0 +1,12 @@
+{
+  "id": "1420698089068744785",
+  "name": "中英文大鸟转转转",
+  "api": "1.0.0",
+  "main": "code.js",
+  "editorType": ["figma"],
+  "ui": "ui.html",
+  "networkAccess": {
+    "allowedDomains": ["none"]
+  },
+  "documentAccess": "dynamic-page"
+}

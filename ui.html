@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>中英文大鸟转转转</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      margin: 0;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      background-color: #f5f5f5;
+      height: 100vh;
+      box-sizing: border-box;
+    }
+    .content {
+      display: flex;
+      justify-content: space-between;
+      flex-grow: 1;
+    }
+    .panel {
+      width: 48%;
+      padding: 10px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      height: auto;
+    }
+    h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    select, input {
+      width: 100%;
+      padding: 6px;
+      margin-bottom: 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    button {
+      font-size: 14px;
+      background-color: #1abcfe;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-align: center;
+      transition: background-color 0.2s ease-in-out;
+    }
+    button:hover {
+      background-color: #0a84d0;
+    }
+    button:active {
+      background-color: #067bc2;
+    }
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: #888;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="content">
+    <!-- 中文属性面板 -->
+    <div class="panel">
+      <h3>中文文本属性</h3>
+      <label for="chinese-font">字体</label>
+      <select id="chinese-font"></select>
+
+      <label for="chinese-font-weight">字重</label>
+      <select id="chinese-font-weight"></select>
+
+      <label for="chinese-font-size">字体大小</label>
+      <input type="number" id="chinese-font-size" value="16">
+
+      <label for="chinese-letter-spacing">字间距</label>
+      <input type="number" id="chinese-letter-spacing" value="0">
+
+      <label for="chinese-line-height">行高</label>
+      <input type="number" id="chinese-line-height" value="24">
+
+      <label for="chinese-paragraph-spacing">段落间距</label>
+      <input type="number" id="chinese-paragraph-spacing" value="16">
+
+      <label for="chinese-text-case">文本大小写</label>
+      <select id="chinese-text-case">
+        <option value="ORIGINAL">原样</option>
+        <option value="UPPER">全大写</option>
+        <option value="LOWER">全小写</option>
+        <option value="TITLE">标题格式</option>
+      </select>
+
+      <label for="chinese-text-decoration">文本装饰</label>
+      <select id="chinese-text-decoration">
+        <option value="NONE">无</option>
+        <option value="UNDERLINE">下划线</option>
+        <option value="STRIKETHROUGH">删除线</option>
+      </select>
+
+      <button id="apply-chinese">应用到中文文本</button>
+    </div>
+
+    <!-- 英文属性面板 -->
+    <div class="panel">
+      <h3>英文文本属性</h3>
+      <label for="english-font">字体</label>
+      <select id="english-font"></select>
+
+      <label for="english-font-weight">字重</label>
+      <select id="english-font-weight"></select>
+
+      <label for="english-font-size">字体大小</label>
+      <input type="number" id="english-font-size" value="14">
+
+      <label for="english-letter-spacing">字间距</label>
+      <input type="number" id="english-letter-spacing" value="0.5">
+
+      <label for="english-line-height">行高</label>
+      <input type="number" id="english-line-height" value="24">
+
+      <label for="english-paragraph-spacing">段落间距</label>
+      <input type="number" id="english-paragraph-spacing" value="16">
+
+      <label for="english-text-case">文本大小写</label>
+      <select id="english-text-case">
+        <option value="ORIGINAL">原样</option>
+        <option value="UPPER">全大写</option>
+        <option value="LOWER">全小写</option>
+        <option value="TITLE">标题格式</option>
+      </select>
+
+      <label for="english-text-decoration">文本装饰</label>
+      <select id="english-text-decoration">
+        <option value="NONE">无</option>
+        <option value="UNDERLINE">下划线</option>
+        <option value="STRIKETHROUGH">删除线</option>
+      </select>
+
+      <button id="apply-english">应用到英文文本</button>
+    </div>
+  </div>
+
+  <div class="footer">Big Bird Text Formatter v1.0</div>
+
+  <script>
+    let fontsByFamily = {};  // 用于保存字体家族及其字重
+
+    window.onmessage = (event) => {
+      const pluginMessage = event.data.pluginMessage;
+      
+      if (pluginMessage.type === 'fonts-loaded') {
+        const fonts = pluginMessage.fonts;
+
+        // 创建唯一字体家族集合
+        fontsByFamily = fonts.reduce((acc, font) => {
+          const family = font.fontName.family;
+          const style = font.fontName.style;
+          if (!acc[family]) {
+            acc[family] = [];
+          }
+          acc[family].push(style);  // 将字重加入对应字体家族
+          return acc;
+        }, {});
+
+        const chineseFontSelect = document.getElementById('chinese-font');
+        const englishFontSelect = document.getElementById('english-font');
+        
+        // 显示字体家族（无重复）
+        Object.keys(fontsByFamily).forEach(font => {
+          const chineseOption = document.createElement('option');
+          const englishOption = document.createElement('option');
+          chineseOption.value = font;
+          englishOption.value = font;
+          chineseOption.text = font;
+          englishOption.text = font;
+          chineseFontSelect.appendChild(chineseOption);
+          englishFontSelect.appendChild(englishOption);
+        });
+
+        // 更新字重选项函数
+        const updateFontWeights = (fontFamily, weightSelectId) => {
+          const fontWeightSelect = document.getElementById(weightSelectId);
+          fontWeightSelect.innerHTML = '';  // 清空之前的字重选项
+          fontsByFamily[fontFamily].forEach(weight => {
+            const option = document.createElement('option');
+            option.value = weight;
+            option.text = weight;
+            fontWeightSelect.appendChild(option);
+          });
+        };
+
+        // 监听中文字体选择变化，更新字重
+        chineseFontSelect.onchange = (e) => {
+          updateFontWeights(e.target.value, 'chinese-font-weight');
+        };
+
+        // 监听英文字体选择变化，更新字重
+        englishFontSelect.onchange = (e) => {
+          updateFontWeights(e.target.value, 'english-font-weight');
+        };
+      }
+    };
+
+    document.getElementById('apply-chinese').onclick = () => {
+      const styles = {
+        fontFamily: document.getElementById('chinese-font').value,
+        fontWeight: document.getElementById('chinese-font-weight').value,
+        fontSize: parseFloat(document.getElementById('chinese-font-size').value),
+        letterSpacing: parseFloat(document.getElementById('chinese-letter-spacing').value),
+        lineHeight: parseFloat(document.getElementById('chinese-line-height').value),
+        paragraphSpacing: parseFloat(document.getElementById('chinese-paragraph-spacing').value),
+        textCase: document.getElementById('chinese-text-case').value,
+        textDecoration: document.getElementById('chinese-text-decoration').value
+      };
+      parent.postMessage({ pluginMessage: { type: 'apply-chinese-styles', styles } }, '*');
+    };
+
+    document.getElementById('apply-english').onclick = () => {
+      const styles = {
+        fontFamily: document.getElementById('english-font').value,
+        fontWeight: document.getElementById('english-font-weight').value,
+        fontSize: parseFloat(document.getElementById('english-font-size').value),
+        letterSpacing: parseFloat(document.getElementById('english-letter-spacing').value),
+        lineHeight: parseFloat(document.getElementById('english-line-height').value),
+        paragraphSpacing: parseFloat(document.getElementById('english-paragraph-spacing').value),
+        textCase: document.getElementById('english-text-case').value,
+        textDecoration: document.getElementById('english-text-decoration').value
+      };
+      parent.postMessage({ pluginMessage: { type: 'apply-english-styles', styles } }, '*');
+    };
+  </script>
+</body>
+</html>
