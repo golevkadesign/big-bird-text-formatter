@@ -2,20 +2,20 @@
 
 ## 插件介绍 (Plugin Introduction)
 
-**中英文大鸟转转转** 是一个 Figma 插件，专为设计师设计，能够自动识别并区分 Figma 设计中的中文和英文文本。这个插件允许你根据文本的语言（中文或英文）分别调整和统一文本样式，包括字体、字号、字重、行高等排版属性。
+**中英文大鸟转转转** 是一个 Figma 插件，专为设计师设计，能够自动识别当前所选 frame 下所有中文和英文文本并允许你根据文本的语言（中文或英文）分别调整和统一文本样式，包括字体、字号、字重、行高等排版属性。
 
-**Big Bird Text Formatter** is a Figma plugin designed for designers to automatically detect and distinguish between Chinese and English text in Figma designs. This plugin allows you to separately adjust and unify text styles based on the language (Chinese or English), including font family, font size, font weight, line height, and more.
+**Big Bird Text Formatter** is a Figma plugin designed for designers to automatically detect and distinguish between Chinese and English text in Frame selection. This plugin allows you to separately adjust and unify text styles based on the language (Chinese or English), including font family, font size, font weight, line height, and more.
 
 ---
 
 ## 功能 (Features)
 - 自动识别选定文本中的中文和英文内容。
 - 独立修改中文和英文文本的字体、字号、字重、行高等样式属性。
-- 当选定文本样式混合时（如不同的字号），会显示为 `mix` 状态，保持未修改的样式不变。
+- 当选定文本样式混合时（如不同的字号），会显示为 `空白` 状态，保持未修改的样式不变。
 
 - Automatically detects Chinese and English content in selected text.
 - Independently modify font family, font size, font weight, line height, and other style properties for both Chinese and English text.
-- Displays `mix` status when the selected text has mixed styles (e.g., different font sizes) and preserves the unmodified styles.
+- Displays `empty` status when the selected text has mixed styles (e.g., different font sizes) and preserves the unmodified styles.
 
 ---
 
@@ -40,8 +40,8 @@ After successful import, you’ll be able to experience all the features of the 
 
 ## 插件开发状态 (Development Status)
 
-	•	该插件正在 Figma 社区审核中，尚未正式上线。Figma 官方发布后，将更新此处链接。
-	•	The plugin is currently under review in the Figma community and has not been officially launched. The link will be updated here once it is officially released by Figma.
+- 该插件正在 Figma 社区审核中，尚未正式上线。Figma 官方发布后，将更新此处链接。
+- The plugin is currently under review in the Figma community and has not been officially launched. The link will be updated here once it is officially released by Figma.
 
 ## 贡献 (Contributing)
 
