@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>中英文大鸟转转转</title>
+  <title>Big Bird Text Formatter</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -46,7 +46,7 @@
     }
     button {
       font-size: 14px;
-      background-color: #1abcfe;
+      background-color: black;
       color: white;
       border: none;
       padding: 10px;
@@ -56,10 +56,10 @@
       transition: background-color 0.2s ease-in-out;
     }
     button:hover {
-      background-color: #0a84d0;
+      background-color: #333;
     }
     button:active {
-      background-color: #067bc2;
+      background-color: #111;
     }
     .footer {
       text-align: center;
@@ -71,111 +71,112 @@
 </head>
 <body>
   <div class="content">
-    <!-- 中文属性面板 -->
+    <!-- Chinese Text Properties Panel -->
     <div class="panel">
-      <h3>中文文本属性</h3>
-      <label for="chinese-font">字体</label>
+      <h3>Chinese Text Properties</h3>
+      <label for="chinese-font">Font</label>
       <select id="chinese-font"></select>
 
-      <label for="chinese-font-weight">字重</label>
+      <label for="chinese-font-weight">Font Weight</label>
       <select id="chinese-font-weight"></select>
 
-      <label for="chinese-font-size">字体大小</label>
+      <label for="chinese-font-size">Font Size</label>
       <input type="number" id="chinese-font-size" value="16">
 
-      <label for="chinese-letter-spacing">字间距</label>
+      <label for="chinese-letter-spacing">Letter Spacing</label>
       <input type="number" id="chinese-letter-spacing" value="0">
 
-      <label for="chinese-line-height">行高</label>
+      <label for="chinese-line-height">Line Height</label>
       <input type="number" id="chinese-line-height" value="24">
 
-      <label for="chinese-paragraph-spacing">段落间距</label>
+      <label for="chinese-paragraph-spacing">Paragraph Spacing</label>
       <input type="number" id="chinese-paragraph-spacing" value="16">
 
-      <label for="chinese-text-case">文本大小写</label>
+      <label for="chinese-text-case">Text Case</label>
       <select id="chinese-text-case">
-        <option value="ORIGINAL">原样</option>
-        <option value="UPPER">全大写</option>
-        <option value="LOWER">全小写</option>
-        <option value="TITLE">标题格式</option>
+        <option value="ORIGINAL">Original</option>
+        <option value="UPPER">Uppercase</option>
+        <option value="LOWER">Lowercase</option>
+        <option value="TITLE">Title Case</option>
       </select>
 
-      <label for="chinese-text-decoration">文本装饰</label>
+      <label for="chinese-text-decoration">Text Decoration</label>
       <select id="chinese-text-decoration">
-        <option value="NONE">无</option>
-        <option value="UNDERLINE">下划线</option>
-        <option value="STRIKETHROUGH">删除线</option>
+        <option value="NONE">None</option>
+        <option value="UNDERLINE">Underline</option>
+        <option value="STRIKETHROUGH">Strikethrough</option>
       </select>
 
-      <button id="apply-chinese">应用到中文文本</button>
+      <button id="apply-chinese">Apply to Chinese Text</button>
     </div>
 
-    <!-- 英文属性面板 -->
+    <!-- English Text Properties Panel -->
     <div class="panel">
-      <h3>英文文本属性</h3>
-      <label for="english-font">字体</label>
+      <h3>English Text Properties</h3>
+      <label for="english-font">Font</label>
       <select id="english-font"></select>
 
-      <label for="english-font-weight">字重</label>
+      <label for="english-font-weight">Font Weight</label>
       <select id="english-font-weight"></select>
 
-      <label for="english-font-size">字体大小</label>
+      <label for="english-font-size">Font Size</label>
       <input type="number" id="english-font-size" value="14">
 
-      <label for="english-letter-spacing">字间距</label>
+      <label for="english-letter-spacing">Letter Spacing</label>
       <input type="number" id="english-letter-spacing" value="0.5">
 
-      <label for="english-line-height">行高</label>
+      <label for="english-line-height">Line Height</label>
       <input type="number" id="english-line-height" value="24">
 
-      <label for="english-paragraph-spacing">段落间距</label>
+      <label for="english-paragraph-spacing">Paragraph Spacing</label>
       <input type="number" id="english-paragraph-spacing" value="16">
 
-      <label for="english-text-case">文本大小写</label>
+      <label for="english-text-case">Text Case</label>
       <select id="english-text-case">
-        <option value="ORIGINAL">原样</option>
-        <option value="UPPER">全大写</option>
-        <option value="LOWER">全小写</option>
-        <option value="TITLE">标题格式</option>
+        <option value="ORIGINAL">Original</option>
+        <option value="UPPER">Uppercase</option>
+        <option value="LOWER">Lowercase</option>
+        <option value="TITLE">Title Case</option>
       </select>
 
-      <label for="english-text-decoration">文本装饰</label>
+      <label for="english-text-decoration">Text Decoration</label>
       <select id="english-text-decoration">
-        <option value="NONE">无</option>
-        <option value="UNDERLINE">下划线</option>
-        <option value="STRIKETHROUGH">删除线</option>
+        <option value="NONE">None</option>
+        <option value="UNDERLINE">Underline</option>
+        <option value="STRIKETHROUGH">Strikethrough</option>
       </select>
 
-      <button id="apply-english">应用到英文文本</button>
+      <button id="apply-english">Apply to English Text</button>
     </div>
   </div>
 
   <div class="footer">Big Bird Text Formatter v1.0</div>
 
   <script>
-    let fontsByFamily = {};  // 用于保存字体家族及其字重
+    let fontsByFamily = {};
 
+    // 接收 Figma 插件的消息
     window.onmessage = (event) => {
       const pluginMessage = event.data.pluginMessage;
-      
+
       if (pluginMessage.type === 'fonts-loaded') {
         const fonts = pluginMessage.fonts;
 
-        // 创建唯一字体家族集合
+        // 将字体家族及其字重存储在 fontsByFamily 对象中
         fontsByFamily = fonts.reduce((acc, font) => {
           const family = font.fontName.family;
           const style = font.fontName.style;
           if (!acc[family]) {
             acc[family] = [];
           }
-          acc[family].push(style);  // 将字重加入对应字体家族
+          acc[family].push(style);  // 添加字体字重
           return acc;
         }, {});
 
         const chineseFontSelect = document.getElementById('chinese-font');
         const englishFontSelect = document.getElementById('english-font');
-        
-        // 显示字体家族（无重复）
+
+        // 显示字体家族选项
         Object.keys(fontsByFamily).forEach(font => {
           const chineseOption = document.createElement('option');
           const englishOption = document.createElement('option');
@@ -187,10 +188,10 @@
           englishFontSelect.appendChild(englishOption);
         });
 
-        // 更新字重选项函数
+        // 更新字重选项
         const updateFontWeights = (fontFamily, weightSelectId) => {
           const fontWeightSelect = document.getElementById(weightSelectId);
-          fontWeightSelect.innerHTML = '';  // 清空之前的字重选项
+          fontWeightSelect.innerHTML = '';  // 清空字重选项
           fontsByFamily[fontFamily].forEach(weight => {
             const option = document.createElement('option');
             option.value = weight;
@@ -199,25 +200,47 @@
           });
         };
 
-        // 监听中文字体选择变化，更新字重
+        // 中文字体变化时更新字重
         chineseFontSelect.onchange = (e) => {
           updateFontWeights(e.target.value, 'chinese-font-weight');
         };
 
-        // 监听英文字体选择变化，更新字重
+        // 英文字体变化时更新字重
         englishFontSelect.onchange = (e) => {
           updateFontWeights(e.target.value, 'english-font-weight');
         };
       }
+
+      if (pluginMessage.type === 'selection-changed') {
+        const { fontSize, fontWeight, letterSpacing, lineHeight } = pluginMessage;
+
+        // 如果是混合值则显示为 "mix"
+        document.getElementById('chinese-font-size').value = fontSize === 'mix' ? 'mix' : fontSize;
+        document.getElementById('chinese-font-weight').value = fontWeight === 'mix' ? 'mix' : fontWeight;
+        document.getElementById('chinese-letter-spacing').value = letterSpacing === 'mix' ? 'mix' : letterSpacing;
+        document.getElementById('chinese-line-height').value = lineHeight === 'mix' ? 'mix' : lineHeight;
+
+        // 英文文本的相同处理
+        document.getElementById('english-font-size').value = fontSize === 'mix' ? 'mix' : fontSize;
+        document.getElementById('english-font-weight').value = fontWeight === 'mix' ? 'mix' : fontWeight;
+        document.getElementById('english-letter-spacing').value = letterSpacing === 'mix' ? 'mix' : letterSpacing;
+        document.getElementById('english-line-height').value = lineHeight === 'mix' ? 'mix' : lineHeight;
+      }
     };
 
+    const parseInputValue = (element, currentValue) => {
+      const value = element.value;
+      return value === 'mix' ? currentValue : value;
+    };
+
+    // 应用中文文本样式
     document.getElementById('apply-chinese').onclick = () => {
       const styles = {
         fontFamily: document.getElementById('chinese-font').value,
-        fontWeight: document.getElementById('chinese-font-weight').value,
-        fontSize: parseFloat(document.getElementById('chinese-font-size').value),
-        letterSpacing: parseFloat(document.getElementById('chinese-letter-spacing').value),
-        lineHeight: parseFloat(document.getElementById('chinese-line-height').value),
+        fontWeight: parseInputValue(document.getElementById('chinese-font-weight'), 'current'),
+        fontSize: parseInputValue(document.getElementById('chinese-font-size'), 'current'),
+        letterSpacing: parseInputValue(document.getElementById('chinese-letter-spacing'), 'current'),
+        lineHeight: parseInputValue(document.getElementById('chinese-line-height'), 'current'),
         paragraphSpacing: parseFloat(document.getElementById('chinese-paragraph-spacing').value),
         textCase: document.getElementById('chinese-text-case').value,
         textDecoration: document.getElementById('chinese-text-decoration').value
@@ -225,13 +248,14 @@
       parent.postMessage({ pluginMessage: { type: 'apply-chinese-styles', styles } }, '*');
     };
 
+    // 应用英文文本样式
     document.getElementById('apply-english').onclick = () => {
       const styles = {
         fontFamily: document.getElementById('english-font').value,
-        fontWeight: document.getElementById('english-font-weight').value,
-        fontSize: parseFloat(document.getElementById('english-font-size').value),
-        letterSpacing: parseFloat(document.getElementById('english-letter-spacing').value),
-        lineHeight: parseFloat(document.getElementById('english-line-height').value),
+        fontWeight: parseInputValue(document.getElementById('english-font-weight'), 'current'),
+        fontSize: parseInputValue(document.getElementById('english-font-size'), 'current'),
+        letterSpacing: parseInputValue(document.getElementById('english-letter-spacing'), 'current'),
+        lineHeight: parseInputValue(document.getElementById('english-line-height'), 'current'),
         paragraphSpacing: parseFloat(document.getElementById('english-paragraph-spacing').value),
         textCase: document.getElementById('english-text-case').value,
         textDecoration: document.getElementById('english-text-decoration').value
