@@ -9,6 +9,46 @@ figma.listAvailableFontsAsync().then((fonts) => {
   checkSelectionStyles(); // 调用检查样式的函数
 });
 
+// 使用 `figma.ui.on` 事件监听器替代 `window.onmessage`
+figma.ui.on('message', (pluginMessage) => {
+  if (pluginMessage && pluginMessage.type === 'selection-changed') {
+    const { fontSize, fontWeight, letterSpacing, lineHeight } = pluginMessage;
+
+    // 更新每个字段的值，包括处理 "mix" 状态
+    updateUIField('chinese-font-size', fontSize, 'input');
+    updateUIField('chinese-font-weight', fontWeight, 'select');
+    updateUIField('chinese-letter-spacing', letterSpacing, 'input');
+    updateUIField('chinese-line-height', lineHeight, 'input');
+
+    updateUIField('english-font-size', fontSize, 'input');
+    updateUIField('english-font-weight', fontWeight, 'select');
+    updateUIField('english-letter-spacing', letterSpacing, 'input');
+    updateUIField('english-line-height', lineHeight, 'input');
+  }
+});
+
+// 新增的更新 UI 函数
+function updateUIField(elementId, value, fieldType) {
+  const element = document.getElementById(elementId);
+  if (element) {
+    if (fieldType === 'select') {
+      // 如果是 "mix"，则创建一个临时选项来显示 "mix"
+      if (value === 'mix') {
+        const mixOption = document.createElement('option');
+        mixOption.value = 'mix';
+        mixOption.text = 'mix';
+        mixOption.selected = true;
+        element.appendChild(mixOption);
+      } else {
+        element.value = (value !== undefined ? value : '');
+      }
+    } else if (fieldType === 'input') {
+      // 对于 input 元素直接设置值
+      element.value = (value === 'mix') ? 'mix' : (value !== undefined ? value : '');
+    }
+  }
+}
+
 // 检查选中的文本节点的样式是否混合
 function checkSelectionStyles() {
   const selectedNodes = figma.currentPage.selection;
@@ -60,11 +100,8 @@ function checkSelectionStyles() {
   });
 }
 
-// 监听选择变化
-figma.on('selectionchange', checkSelectionStyles);
-
-// 优化样式应用逻辑，确保批量处理时不会导致卡顿
-figma.ui.onmessage = async (msg) => {
+// 处理 UI 消息的逻辑
+figma.ui.on('message', async (msg) => {
   const selectedNodes = figma.currentPage.selection;
 
   if (selectedNodes.length === 0) {
@@ -77,18 +114,14 @@ figma.ui.onmessage = async (msg) => {
       const textContent = textNode.characters;
       const isChinese = /[\u4e00-\u9fa5]+/.test(textContent);
 
-      // 应用中文样式，仅针对中文文本
       if (msg.type === 'apply-chinese-styles' && isChinese) {
         await applyTextStyle(textNode, msg.styles);
-      }
-      // 应用英文样式，仅针对非中文文本
-      else if (msg.type === 'apply-english-styles' && !isChinese) {
+      } else if (msg.type === 'apply-english-styles' && !isChinese) {
         await applyTextStyle(textNode, msg.styles);
       }
     }
   };
 
-  // 对每个选中的 frame 或 group 进行处理
   for (const node of selectedNodes) {
     if (node.type === 'FRAME' || node.type === 'GROUP') {
       const textNodes = node.findAllWithCriteria({ types: ['TEXT'] });
@@ -99,9 +132,9 @@ figma.ui.onmessage = async (msg) => {
   }
 
   figma.notify('Text styles updated successfully.');
-};
+});
 
-// 改进后的样式应用函数，确保对每个属性进行更精确的应用
+// 样式应用函数
 async function applyTextStyle(textNode, styles) {
   if (styles.fontFamily && styles.fontWeight !== 'current') {
     await figma.loadFontAsync({ family: styles.fontFamily, style: styles.fontWeight });
