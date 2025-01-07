@@ -208,6 +208,11 @@ function checkSelectionStyles() {
 // 添加选区变化监听
 figma.on('selectionchange', () => {
   console.log('Selection changed'); // Debug log
+  // 先发送一个清空消息
+  figma.ui.postMessage({
+    type: 'reset-fields'
+  });
+  // 然后再检查新的选择
   checkSelectionStyles();
 });
 
@@ -221,15 +226,22 @@ figma.listAvailableFontsAsync().then((fonts) => {
 // 样式应用函数
 async function applyTextStyle(textNode, styles) {
   try {
-    // 先加载字体
-    if (styles.fontFamily && styles.fontWeight !== 'mix' && styles.fontWeight !== 'current') {
-      await figma.loadFontAsync({ 
-        family: styles.fontFamily, 
-        style: styles.fontWeight 
-      });
+    // 1. 确保字体已加载（这一步必须在修改任何样式之前）
+    if (styles.fontFamily !== 'mix' && styles.fontWeight !== 'mix') {
+      try {
+        await figma.loadFontAsync({ 
+          family: styles.fontFamily || textNode.fontName.family,
+          style: styles.fontWeight || textNode.fontName.style
+        });
+      } catch (error) {
+        console.error('字体加载失败：', error);
+      }
+    } else {
+      // 如果保持现有字体，也需要确保它已加载
+      await figma.loadFontAsync(textNode.fontName);
     }
 
-    // 只应用非 mix 的样式
+    // 2. 应用样式（只有在字体加载成功后）
     if (styles.fontFamily !== 'mix' && styles.fontWeight !== 'mix') {
       textNode.fontName = { 
         family: styles.fontFamily, 
@@ -237,37 +249,37 @@ async function applyTextStyle(textNode, styles) {
       };
     }
 
-    if (styles.fontSize !== 'mix' && styles.fontSize !== 'current') {
+    if (styles.fontSize !== 'mix' && styles.fontSize !== 'current' && !isNaN(parseFloat(styles.fontSize))) {
       textNode.fontSize = parseFloat(styles.fontSize);
     }
 
-    if (styles.letterSpacing !== 'mix' && styles.letterSpacing !== 'current') {
+    if (styles.letterSpacing !== 'mix' && styles.letterSpacing !== 'current' && !isNaN(parseFloat(styles.letterSpacing))) {
       textNode.letterSpacing = { 
         value: parseFloat(styles.letterSpacing), 
         unit: "PIXELS" 
       };
     }
 
-    if (styles.lineHeight !== 'mix' && styles.lineHeight !== 'current') {
+    if (styles.lineHeight !== 'mix' && styles.lineHeight !== 'current' && !isNaN(parseFloat(styles.lineHeight))) {
       textNode.lineHeight = { 
         value: parseFloat(styles.lineHeight), 
         unit: "PIXELS" 
       };
     }
 
-    if (styles.paragraphSpacing !== 'mix' && styles.paragraphSpacing !== 'current') {
+    if (styles.paragraphSpacing !== 'mix' && styles.paragraphSpacing !== 'current' && !isNaN(parseFloat(styles.paragraphSpacing))) {
       textNode.paragraphSpacing = parseFloat(styles.paragraphSpacing);
     }
 
-    if (styles.textCase !== 'mix') {
+    if (styles.textCase !== 'mix' && styles.textCase !== 'current') {
       textNode.textCase = styles.textCase;
     }
 
-    if (styles.textDecoration !== 'mix') {
+    if (styles.textDecoration !== 'mix' && styles.textDecoration !== 'current') {
       textNode.textDecoration = styles.textDecoration;
     }
   } catch (error) {
-    console.error('应用样式时出错：', error);
+    console.error('样式应用出错：', error);
     throw error;
   }
 }
