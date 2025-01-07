@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Big Bird Text Formatter</title>
   <style>
+    /* 基础样式保持不变 */
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       margin: 0;
@@ -64,6 +65,7 @@
       display: block;
     }
 
+    /* 输入框和下拉菜单基础样式 */
     select, input {
       width: 100%;
       padding: 6px;
@@ -73,12 +75,54 @@
       font-size: 14px;
       box-sizing: border-box;
       appearance: none;
-      background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="%234b5563"%3E%3Cpath stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"%3E%3C/path%3E%3C/svg%3E');
-      background-repeat: no-repeat;
-      background-position: right 10px center;
-      background-size: 16px 16px;
+      background: #fff;
+      height: 32px;
     }
 
+    /* 下拉菜单箭头 */
+    select {
+      background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="%234b5563"%3E%3Cpath stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"%3E%3C/path%3E%3C/svg%3E');
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      background-size: 16px;
+      padding-right: 32px;
+    }
+
+    /* 混合状态样式 */
+    .mixed-value {
+      background-color: #f3f4f6 !important;
+      color: #6b7280 !important;
+      font-style: italic;
+      position: relative;
+    }
+
+    /* 混合状态下的占位符 */
+    .mixed-value::placeholder {
+      color: #6b7280;
+      font-style: italic;
+    }
+
+    /* 下拉菜单混合状态选项 */
+    select.mixed-value option[value="mix"] {
+      font-style: italic;
+      color: #6b7280;
+      background-color: #f3f4f6;
+    }
+
+    /* 下拉菜单普通选项 */
+    select.mixed-value option:not([value="mix"]) {
+      font-style: normal;
+      color: #000;
+      background-color: #fff;
+    }
+
+    /* 空状态样式 */
+    .empty-state {
+      color: #9ca3af;
+      font-style: italic;
+    }
+
+    /* 按钮样式 */
     button {
       font-size: 14px;
       background-color: #3b82f6;
@@ -89,6 +133,8 @@
       cursor: pointer;
       text-align: center;
       transition: background-color 0.2s ease-in-out;
+      width: 100%;
+      margin-top: 16px;
     }
 
     button:hover {
@@ -99,6 +145,7 @@
       background-color: #1e40af;
     }
 
+    /* 其他通用样式 */
     .footer {
       text-align: center;
       font-size: 12px;
@@ -155,20 +202,20 @@
 
       <div>
         <label for="chinese-font-size">Font Size</label>
-        <input type="number" id="chinese-font-size" value="16">
+        <input type="text" id="chinese-font-size" placeholder="Size">
       </div>
       <div>
         <label for="chinese-letter-spacing">Letter Spacing</label>
-        <input type="number" id="chinese-letter-spacing" value="0">
+        <input type="text" id="chinese-letter-spacing" placeholder="Spacing">
       </div>
 
       <div>
         <label for="chinese-line-height">Line Height</label>
-        <input type="number" id="chinese-line-height" value="24">
+        <input type="text" id="chinese-line-height" placeholder="Height">
       </div>
       <div>
         <label for="chinese-paragraph-spacing">Paragraph Spacing</label>
-        <input type="number" id="chinese-paragraph-spacing" value="16">
+        <input type="text" id="chinese-paragraph-spacing" placeholder="Spacing">
       </div>
 
       <div>
@@ -206,20 +253,20 @@
 
       <div>
         <label for="english-font-size">Font Size</label>
-        <input type="number" id="english-font-size" value="14">
+        <input type="text" id="english-font-size" placeholder="Size">
       </div>
       <div>
         <label for="english-letter-spacing">Letter Spacing</label>
-        <input type="number" id="english-letter-spacing" value="0.5">
+        <input type="text" id="english-letter-spacing" placeholder="Spacing">
       </div>
 
       <div>
         <label for="english-line-height">Line Height</label>
-        <input type="number" id="english-line-height" value="24">
+        <input type="text" id="english-line-height" placeholder="Height">
       </div>
       <div>
         <label for="english-paragraph-spacing">Paragraph Spacing</label>
-        <input type="number" id="english-paragraph-spacing" value="16">
+        <input type="text" id="english-paragraph-spacing" placeholder="Spacing">
       </div>
 
       <div>
@@ -274,12 +321,60 @@
       });
     });
 
-    // Handle Figma plugin messages
+    // 混合状态处理函数
+    function handleMixedState(element, value) {
+      // 先重置状态
+      element.classList.remove('mixed-value');
+      element.classList.remove('empty-state');
+      
+      if (value === 'mix') {
+        element.classList.add('mixed-value');
+        if (element.tagName === 'SELECT') {
+          // 为下拉菜单添加 mix 选项
+          let mixOption = element.querySelector('option[value="mix"]');
+          if (!mixOption) {
+            mixOption = document.createElement('option');
+            mixOption.value = 'mix';
+            mixOption.text = 'Mixed Values';
+            element.insertBefore(mixOption, element.firstChild);
+          }
+          element.value = 'mix';
+        } else {
+          // 为输入框设置占位符
+          element.value = '';
+          element.placeholder = 'Mixed values';
+        }
+      } else if (value === '' || value === undefined || value === null) {
+        // 处理空值状态
+        element.value = '';
+        element.placeholder = element.tagName === 'SELECT' ? 'Select...' : 'Enter value';
+        element.classList.add('empty-state');
+      } else {
+        // 处理正常值
+        if (element.tagName === 'SELECT') {
+          const mixOption = element.querySelector('option[value="mix"]');
+          if (mixOption) {
+            element.removeChild(mixOption);
+          }
+        }
+        element.value = value;
+        element.placeholder = '';
+      }
+    }
+
+    // Debug 日志函数
+    function log(message, data) {
+      console.log(`[BigBird] ${message}`, data || '');
+    }
+
+    // 处理 Figma 插件消息
     window.onmessage = (event) => {
       const pluginMessage = event.data.pluginMessage;
+      log('Received message:', pluginMessage.type);
 
       if (pluginMessage.type === 'fonts-loaded') {
         const fonts = pluginMessage.fonts;
+        log('Fonts loaded:', fonts.length);
 
         // Store font families and weights
         fontsByFamily = fonts.reduce((acc, font) => {
@@ -311,12 +406,14 @@
         const updateFontWeights = (fontFamily, weightSelectId) => {
           const fontWeightSelect = document.getElementById(weightSelectId);
           fontWeightSelect.innerHTML = '';
-          fontsByFamily[fontFamily].forEach(weight => {
-            const option = document.createElement('option');
-            option.value = weight;
-            option.text = weight;
-            fontWeightSelect.appendChild(option);
-          });
+          if (fontFamily && fontsByFamily[fontFamily]) {
+            fontsByFamily[fontFamily].forEach(weight => {
+              const option = document.createElement('option');
+              option.value = weight;
+              option.text = weight;
+              fontWeightSelect.appendChild(option);
+            });
+          }
         };
 
         // Handle font changes
@@ -330,59 +427,61 @@
       }
 
       if (pluginMessage.type === 'selection-changed') {
-        const { fontSize, fontWeight, letterSpacing, lineHeight } = pluginMessage;
+        const { styles } = pluginMessage;
+        log('Selection changed, updating styles:', styles);
 
-        // Update Chinese text fields
-        document.getElementById('chinese-font-size').value = fontSize === 'mix' ? 'mix' : fontSize;
-        document.getElementById('chinese-font-weight').value = fontWeight === 'mix' ? 'mix' : fontWeight;
-        document.getElementById('chinese-letter-spacing').value = letterSpacing === 'mix' ? 'mix' : letterSpacing;
-        document.getElementById('chinese-line-height').value = lineHeight === 'mix' ? 'mix' : lineHeight;
+        // 更新所有字段
+        Object.entries(styles).forEach(([prop, value]) => {
+          // 中文面板
+          const chineseElement = document.getElementById(`chinese-${prop}`);
+          if (chineseElement) {
+            handleMixedState(chineseElement, value);
+          }
 
-        // Update English text fields
-        document.getElementById('english-font-size').value = fontSize === 'mix' ? 'mix' : fontSize;
-        document.getElementById('english-font-weight').value = fontWeight === 'mix' ? 'mix' : fontWeight;
-        document.getElementById('english-letter-spacing').value = letterSpacing === 'mix' ? 'mix' : letterSpacing;
-        document.getElementById('english-line-height').value = lineHeight === 'mix' ? 'mix' : lineHeight;
+          // 英文面板
+          const englishElement = document.getElementById(`english-${prop}`);
+          if (englishElement) {
+            handleMixedState(englishElement, value);
+          }
+        });
       }
     };
 
-    const parseInputValue = (element, currentValue) => {
+    // 处理样式值
+    const parseStyleValue = (element) => {
       const value = element.value;
-      return value === 'mix' ? currentValue : value;
+      return (!value || value === 'mix') ? 'current' : value;
     };
 
-    // Apply Chinese text styles
-    document.getElementById('apply-chinese').onclick = () => {
-      const styles = {
-        fontFamily: document.getElementById('chinese-font').value,
-        fontWeight: parseInputValue(document.getElementById('chinese-font-weight'), 'current'),
-        fontSize: parseInputValue(document.getElementById('chinese-font-size'), 'current'),
-        letterSpacing: parseInputValue(document.getElementById('chinese-letter-spacing'), 'current'),
-        lineHeight: parseInputValue(document.getElementById('chinese-line-height'), 'current'),
-        paragraphSpacing: parseFloat(document.getElementById('chinese-paragraph-spacing').value),
-        textCase: document.getElementById('chinese-text-case').value,
-        textDecoration: document.getElementById('chinese-text-decoration').value
+    // 收集样式
+    const collectStyles = (prefix) => {
+      return {
+        fontFamily: parseStyleValue(document.getElementById(`${prefix}-font`)),
+        fontWeight: parseStyleValue(document.getElementById(`${prefix}-font-weight`)),
+        fontSize: parseStyleValue(document.getElementById(`${prefix}-font-size`)),
+        letterSpacing: parseStyleValue(document.getElementById(`${prefix}-letter-spacing`)),
+        lineHeight: parseStyleValue(document.getElementById(`${prefix}-line-height`)),
+        paragraphSpacing: parseStyleValue(document.getElementById(`${prefix}-paragraph-spacing`)),
+        textCase: parseStyleValue(document.getElementById(`${prefix}-text-case`)),
+        textDecoration: parseStyleValue(document.getElementById(`${prefix}-text-decoration`))
       };
+    };
+
+    // 应用按钮事件处理
+    document.getElementById('apply-chinese').onclick = () => {
+      const styles = collectStyles('chinese');
+      log('Applying Chinese styles:', styles);
       parent.postMessage({ pluginMessage: { type: 'apply-chinese-styles', styles } }, '*');
     };
 
-    // Apply English text styles
     document.getElementById('apply-english').onclick = () => {
-      const styles = {
-        fontFamily: document.getElementById('english-font').value,
-        fontWeight: parseInputValue(document.getElementById('english-font-weight'), 'current'),
-        fontSize: parseInputValue(document.getElementById('english-font-size'), 'current'),
-        letterSpacing: parseInputValue(document.getElementById('english-letter-spacing'), 'current'),
-        lineHeight: parseInputValue(document.getElementById('english-line-height'), 'current'),
-        paragraphSpacing: parseFloat(document.getElementById('english-paragraph-spacing').value),
-        textCase: document.getElementById('english-text-case').value,
-        textDecoration: document.getElementById('english-text-decoration').value
-      };
+      const styles = collectStyles('english');
+      log('Applying English styles:', styles);
       parent.postMessage({ pluginMessage: { type: 'apply-english-styles', styles } }, '*');
     };
 
-    // Add one-click optimization handler
     document.getElementById('optimize-text').onclick = () => {
+      log('Optimizing text');
       parent.postMessage({ pluginMessage: { type: 'optimize-text' } }, '*');
     };
   </script>

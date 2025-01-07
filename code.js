@@ -32,34 +32,28 @@ class TextOptimizer {
   static optimizePunctuation(text, lang) {
     if (lang === 'zh') {
       return text
-        // 将英文标点转换为中文标点
         .replace(/,/g, '，')
         .replace(/\./g, '。')
         .replace(/\?/g, '？')
         .replace(/!/g, '！')
         .replace(/;/g, '；')
         .replace(/:/g, '：')
-        // 修正引号
-        .replace(/"/g, '\u201c')  // 替换成左双引号
-        .replace(/"/g, '\u201d')  // 替换成右双引号
-        .replace(/'/g, '\u2018')  // 替换成左单引号
-        .replace(/'/g, '\u2019')  // 替换成右单引号
-        // 修正破折号和省略号
+        .replace(/"/g, '\u201c')
+        .replace(/"/g, '\u201d')
+        .replace(/'/g, '\u2018')
+        .replace(/'/g, '\u2019')
         .replace(/--/g, '—')
         .replace(/\.\.\./g, '…');
     } else {
       return text
-        // 将中文标点转换为英文标点
         .replace(/，/g, ', ')
         .replace(/。/g, '. ')
         .replace(/？/g, '? ')
         .replace(/！/g, '! ')
         .replace(/；/g, '; ')
         .replace(/：/g, ': ')
-        // 修正引号
         .replace(/[""]/g, '"')
         .replace(/['']/g, "'")
-        // 修正破折号和省略号
         .replace(/—/g, ' - ')
         .replace(/…/g, '...');
     }
@@ -67,35 +61,28 @@ class TextOptimizer {
 
   // 计算建议行高
   static calculateLineHeight(fontSize) {
-    // 根据字号计算黄金比例的行高
     return Math.round(fontSize * 1.5);
   }
 
   // 主优化函数
   static async optimizeTextNode(node) {
     if (node.type !== 'TEXT') return;
-  
+
     try {
-      // 首先加载当前文本使用的字体
+      // 加载当前文本使用的字体
       await figma.loadFontAsync(node.fontName);
-  
-      // 保存原始文本以便比较
+
       const originalText = node.characters;
-      
-      // 检测主要语言
       const mainLang = this.detectMainLanguage(originalText);
       
-      // 应用文本优化
       let optimizedText = originalText;
       optimizedText = this.optimizeSpacing(optimizedText);
       optimizedText = this.optimizePunctuation(optimizedText, mainLang);
-  
-      // 仅在文本确实改变时更新
+
       if (optimizedText !== originalText) {
         node.characters = optimizedText;
       }
-  
-      // 优化行高
+
       if (node.fontSize) {
         const suggestedLineHeight = this.calculateLineHeight(node.fontSize);
         node.lineHeight = { value: suggestedLineHeight, unit: "PIXELS" };
@@ -105,14 +92,13 @@ class TextOptimizer {
       throw error;
     }
   }
-  
-  // 修改 processNodes 方法为异步方法
+
+  // 递归处理所有文本节点
   static async processNodes(nodes) {
     for (const node of nodes) {
       if (node.type === 'TEXT') {
         await this.optimizeTextNode(node);
       }
-      // 递归处理子节点
       if ('children' in node) {
         await this.processNodes(node.children);
       }
@@ -120,158 +106,226 @@ class TextOptimizer {
   }
 }
 
-// 加载所有可用的字体并发送到前端 UI
-figma.listAvailableFontsAsync().then((fonts) => {
-  figma.ui.postMessage({ type: 'fonts-loaded', fonts });
-
-  // 确保在 UI 加载后立即检查当前的选中状态
-  checkSelectionStyles();
-});
-
-// 使用 `figma.ui.on` 事件监听器替代 `window.onmessage`
-figma.ui.on('message', (pluginMessage) => {
-  if (pluginMessage && pluginMessage.type === 'selection-changed') {
-    const { fontSize, fontWeight, letterSpacing, lineHeight } = pluginMessage;
-
-    // 更新每个字段的值，包括处理 "mix" 状态
-    updateUIField('chinese-font-size', fontSize, 'input');
-    updateUIField('chinese-font-weight', fontWeight, 'select');
-    updateUIField('chinese-letter-spacing', letterSpacing, 'input');
-    updateUIField('chinese-line-height', lineHeight, 'input');
-
-    updateUIField('english-font-size', fontSize, 'input');
-    updateUIField('english-font-weight', fontWeight, 'select');
-    updateUIField('english-letter-spacing', letterSpacing, 'input');
-    updateUIField('english-line-height', lineHeight, 'input');
-  }
-});
-
 // 检查选中的文本节点的样式是否混合
 function checkSelectionStyles() {
+  console.log('Checking selection styles...'); // Debug log
   const selectedNodes = figma.currentPage.selection;
-
+  
+  // 如果没有选中节点，清空所有字段
   if (selectedNodes.length === 0) {
+    console.log('No nodes selected, clearing fields'); // Debug log
+    figma.ui.postMessage({
+      type: 'selection-changed',
+      styles: {
+        fontSize: '',
+        fontFamily: '',
+        fontWeight: '',
+        letterSpacing: '',
+        lineHeight: '',
+        paragraphSpacing: '',
+        textCase: '',
+        textDecoration: ''
+      }
+    });
     return;
   }
 
-  let fontSize, fontWeight, letterSpacing, lineHeight;
-  let hasMixedFontSize = false;
-  let hasMixedFontWeight = false;
-  let hasMixedLetterSpacing = false;
-  let hasMixedLineHeight = false;
+  // 初始化所有属性的检查对象
+  const styleProps = {
+    fontSize: { value: undefined, isMixed: false },
+    fontFamily: { value: undefined, isMixed: false },
+    fontWeight: { value: undefined, isMixed: false },
+    letterSpacing: { value: undefined, isMixed: false },
+    lineHeight: { value: undefined, isMixed: false },
+    paragraphSpacing: { value: undefined, isMixed: false },
+    textCase: { value: undefined, isMixed: false },
+    textDecoration: { value: undefined, isMixed: false }
+  };
 
+  let hasTextNode = false;
+
+  // 遍历所有选中的节点
   selectedNodes.forEach(node => {
     if (node.type === 'TEXT') {
-      if (fontSize === undefined) {
-        fontSize = node.fontSize;
-      } else if (fontSize !== node.fontSize) {
-        hasMixedFontSize = true;
-      }
+      hasTextNode = true;
+      // 检查每个属性
+      Object.entries(styleProps).forEach(([prop, status]) => {
+        let currentValue;
+        switch(prop) {
+          case 'fontSize':
+            currentValue = node.fontSize;
+            break;
+          case 'fontFamily':
+            currentValue = node.fontName.family;
+            break;
+          case 'fontWeight':
+            currentValue = node.fontName.style;
+            break;
+          case 'letterSpacing':
+            currentValue = node.letterSpacing ? node.letterSpacing.value : undefined;
+            break;
+          case 'lineHeight':
+            currentValue = node.lineHeight ? node.lineHeight.value : undefined;
+            break;
+          case 'paragraphSpacing':
+            currentValue = node.paragraphSpacing || undefined;
+            break;
+          case 'textCase':
+            currentValue = node.textCase || 'ORIGINAL';
+            break;
+          case 'textDecoration':
+            currentValue = node.textDecoration || 'NONE';
+            break;
+        }
 
-      if (fontWeight === undefined) {
-        fontWeight = node.fontName.style;
-      } else if (fontWeight !== node.fontName.style) {
-        hasMixedFontWeight = true;
-      }
-
-      if (letterSpacing === undefined) {
-        letterSpacing = node.letterSpacing.value;
-      } else if (letterSpacing !== node.letterSpacing.value) {
-        hasMixedLetterSpacing = true;
-      }
-
-      if (lineHeight === undefined) {
-        lineHeight = node.lineHeight.value;
-      } else if (lineHeight !== node.lineHeight.value) {
-        hasMixedLineHeight = true;
-      }
+        if (status.value === undefined) {
+          status.value = currentValue;
+        } else if (status.value !== currentValue) {
+          status.isMixed = true;
+        }
+      });
     }
   });
 
+  if (!hasTextNode) {
+    console.log('No text nodes in selection'); // Debug log
+    return;
+  }
+
+  // 发送状态到 UI
+  const styles = Object.entries(styleProps).reduce((acc, [prop, status]) => {
+    acc[prop] = status.isMixed ? 'mix' : status.value;
+    return acc;
+  }, {});
+
+  console.log('Sending styles to UI:', styles); // Debug log
   figma.ui.postMessage({
     type: 'selection-changed',
-    fontSize: hasMixedFontSize ? 'mix' : fontSize,
-    fontWeight: hasMixedFontWeight ? 'mix' : fontWeight,
-    letterSpacing: hasMixedLetterSpacing ? 'mix' : letterSpacing,
-    lineHeight: hasMixedLineHeight ? 'mix' : lineHeight
+    styles
   });
 }
 
-// 处理 UI 消息的逻辑
-figma.ui.on('message', async (msg) => {
-  if (msg.type === 'optimize-text') {
-    const selectedNodes = figma.currentPage.selection;
-    
-    if (selectedNodes.length === 0) {
-      figma.notify('请选择需要优化的图层');
-      return;
-    }
+// 添加选区变化监听
+figma.on('selectionchange', () => {
+  console.log('Selection changed'); // Debug log
+  checkSelectionStyles();
+});
 
-    try {
-      await TextOptimizer.processNodes(selectedNodes);
-      figma.notify('文本格式已优化完成！');
-    } catch (error) {
-      console.error('优化过程出错：', error);
-      figma.notify('优化过程中出现错误：' + error.message);
-    }
-    return;
-  }
-
-  const selectedNodes = figma.currentPage.selection;
-
-  if (selectedNodes.length === 0) {
-    figma.notify('Please select a frame containing text.');
-    return;
-  }
-
-  const applyTextStylesToNodes = async (textNodes) => {
-    for (const textNode of textNodes) {
-      const textContent = textNode.characters;
-      const isChinese = /[\u4e00-\u9fa5]+/.test(textContent);
-
-      if (msg.type === 'apply-chinese-styles' && isChinese) {
-        await applyTextStyle(textNode, msg.styles);
-      } else if (msg.type === 'apply-english-styles' && !isChinese) {
-        await applyTextStyle(textNode, msg.styles);
-      }
-    }
-  };
-
-  for (const node of selectedNodes) {
-    if (node.type === 'FRAME' || node.type === 'GROUP') {
-      const textNodes = node.findAllWithCriteria({ types: ['TEXT'] });
-      await applyTextStylesToNodes(textNodes);
-    } else if (node.type === 'TEXT') {
-      await applyTextStylesToNodes([node]);
-    }
-  }
-
-  figma.notify('Text styles updated successfully.');
+// 加载所有可用的字体并发送到前端 UI
+figma.listAvailableFontsAsync().then((fonts) => {
+  figma.ui.postMessage({ type: 'fonts-loaded', fonts });
+  // 初始化时也检查一次当前选区
+  checkSelectionStyles();
 });
 
 // 样式应用函数
 async function applyTextStyle(textNode, styles) {
-  if (styles.fontFamily && styles.fontWeight !== 'current') {
-    await figma.loadFontAsync({ family: styles.fontFamily, style: styles.fontWeight });
-    textNode.fontName = { family: styles.fontFamily, style: styles.fontWeight };
-  }
+  try {
+    // 先加载字体
+    if (styles.fontFamily && styles.fontWeight !== 'mix' && styles.fontWeight !== 'current') {
+      await figma.loadFontAsync({ 
+        family: styles.fontFamily, 
+        style: styles.fontWeight 
+      });
+    }
 
-  if (styles.fontSize !== 'current' && !isNaN(parseFloat(styles.fontSize))) {
-    textNode.fontSize = parseFloat(styles.fontSize);
-  }
+    // 只应用非 mix 的样式
+    if (styles.fontFamily !== 'mix' && styles.fontWeight !== 'mix') {
+      textNode.fontName = { 
+        family: styles.fontFamily, 
+        style: styles.fontWeight 
+      };
+    }
 
-  if (styles.letterSpacing !== 'current' && !isNaN(parseFloat(styles.letterSpacing))) {
-    textNode.letterSpacing = { value: parseFloat(styles.letterSpacing), unit: "PIXELS" };
-  }
+    if (styles.fontSize !== 'mix' && styles.fontSize !== 'current') {
+      textNode.fontSize = parseFloat(styles.fontSize);
+    }
 
-  if (styles.lineHeight !== 'current' && !isNaN(parseFloat(styles.lineHeight))) {
-    textNode.lineHeight = { value: parseFloat(styles.lineHeight), unit: "PIXELS" };
-  }
+    if (styles.letterSpacing !== 'mix' && styles.letterSpacing !== 'current') {
+      textNode.letterSpacing = { 
+        value: parseFloat(styles.letterSpacing), 
+        unit: "PIXELS" 
+      };
+    }
 
-  if (styles.paragraphSpacing !== 'current' && !isNaN(parseFloat(styles.paragraphSpacing))) {
-    textNode.paragraphSpacing = parseFloat(styles.paragraphSpacing);
-  }
+    if (styles.lineHeight !== 'mix' && styles.lineHeight !== 'current') {
+      textNode.lineHeight = { 
+        value: parseFloat(styles.lineHeight), 
+        unit: "PIXELS" 
+      };
+    }
 
-  textNode.textCase = styles.textCase;
-  textNode.textDecoration = styles.textDecoration;
+    if (styles.paragraphSpacing !== 'mix' && styles.paragraphSpacing !== 'current') {
+      textNode.paragraphSpacing = parseFloat(styles.paragraphSpacing);
+    }
+
+    if (styles.textCase !== 'mix') {
+      textNode.textCase = styles.textCase;
+    }
+
+    if (styles.textDecoration !== 'mix') {
+      textNode.textDecoration = styles.textDecoration;
+    }
+  } catch (error) {
+    console.error('应用样式时出错：', error);
+    throw error;
+  }
 }
+
+// 统一的消息处理
+figma.ui.on('message', async (msg) => {
+  const selectedNodes = figma.currentPage.selection;
+
+  try {
+    switch (msg.type) {
+      case 'optimize-text':
+        if (selectedNodes.length === 0) {
+          figma.notify('请选择需要优化的图层');
+          return;
+        }
+        await TextOptimizer.processNodes(selectedNodes);
+        figma.notify('文本格式已优化完成！');
+        break;
+
+      case 'apply-chinese-styles':
+      case 'apply-english-styles':
+        if (selectedNodes.length === 0) {
+          figma.notify('Please select a frame containing text.');
+          return;
+        }
+
+        const applyTextStylesToNodes = async (textNodes) => {
+          for (const textNode of textNodes) {
+            const textContent = textNode.characters;
+            const isChinese = /[\u4e00-\u9fa5]+/.test(textContent);
+
+            if (msg.type === 'apply-chinese-styles' && isChinese) {
+              await applyTextStyle(textNode, msg.styles);
+            } else if (msg.type === 'apply-english-styles' && !isChinese) {
+              await applyTextStyle(textNode, msg.styles);
+            }
+          }
+        };
+
+        for (const node of selectedNodes) {
+          if (node.type === 'FRAME' || node.type === 'GROUP') {
+            const textNodes = node.findAllWithCriteria({ types: ['TEXT'] });
+            await applyTextStylesToNodes(textNodes);
+          } else if (node.type === 'TEXT') {
+            await applyTextStylesToNodes([node]);
+          }
+        }
+
+        figma.notify('Text styles updated successfully.');
+        // 更新完样式后重新检查选区
+        checkSelectionStyles();
+        break;
+
+      default:
+        console.log('Unknown message type:', msg.type);
+    }
+  } catch (error) {
+    console.error('消息处理出错：', error);
+    figma.notify('操作过程中出现错误');
+  }
+});
