@@ -371,7 +371,20 @@
     window.onmessage = (event) => {
       const pluginMessage = event.data.pluginMessage;
       log('Received message:', pluginMessage.type);
-
+      if (pluginMessage.type === 'reset-fields') {
+        // 重置所有字段
+        ['chinese', 'english'].forEach(prefix => {
+          const fields = ['font', 'font-weight', 'font-size', 'letter-spacing', 
+                        'line-height', 'paragraph-spacing', 'text-case', 'text-decoration'];
+          fields.forEach(field => {
+            const element = document.getElementById(`${prefix}-${field}`);
+            if (element) {
+              handleMixedState(element, '');
+            }
+          });
+        });
+        return;
+      }
       if (pluginMessage.type === 'fonts-loaded') {
         const fonts = pluginMessage.fonts;
         log('Fonts loaded:', fonts.length);
