@@ -19,7 +19,7 @@
 - **支持混合状态检测**：在选择多个文本节点时，自动检测混合属性。
 - **简洁的用户界面**：遵循 Tailwind 风格设计的清晰直观界面。
 
-### New Features (v1.2.0) | 新功能
+### New Features (v1.4.0) | 新功能
 - **One-Click Format Optimization**: Automatically adjusts spacing, punctuation, and typography for mixed-language text.
 - **Smart Language Detection**: Identifies and applies appropriate formatting rules based on text content.
 - **Batch Processing**: Process multiple text layers simultaneously.
@@ -103,18 +103,3 @@ Feel free to open an issue or submit a pull request if you have suggestions or w
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 该项目采用 MIT 许可协议。有关详细信息，请参阅 [LICENSE](LICENSE) 文件。
-
-## Changelog | 更新日志
-
-### v1.2.0 (2024-01-07)
-- Added one-click text format optimization
-- Added Quick Actions panel
-- Improved line height calculation
-- Enhanced error handling
-- Fixed font loading issues
-
-- 新增一键文本格式优化功能
-- 新增快速操作面板
-- 改进行高计算
-- 增强错误处理
-- 修复字体加载问题
