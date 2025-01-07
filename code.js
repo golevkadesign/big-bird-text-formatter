@@ -1,12 +1,131 @@
 // 显示插件 UI，设置宽度和高度
-figma.showUI(__html__, { width: 600, height: 500 });
+figma.showUI(__html__, { width: 600, height: 600 });
+
+// 文本格式优化器
+class TextOptimizer {
+  // 检测文本主要语言
+  static detectMainLanguage(text) {
+    const chineseCount = (text.match(/[\u4e00-\u9fa5]/g) || []).length;
+    const englishCount = (text.match(/[a-zA-Z]/g) || []).length;
+    return chineseCount > englishCount ? 'zh' : 'en';
+  }
+
+  // 空格优化
+  static optimizeSpacing(text) {
+    return text
+      // 修正中英文之间的空格
+      .replace(/([\u4e00-\u9fa5])([\w])/g, '$1 $2')
+      .replace(/([\w])([\u4e00-\u9fa5])/g, '$1 $2')
+      // 修正中文和数字之间的空格
+      .replace(/([\u4e00-\u9fa5])(\d)/g, '$1 $2')
+      .replace(/(\d)([\u4e00-\u9fa5])/g, '$1 $2')
+      // 删除重复空格
+      .replace(/\s+/g, ' ')
+      // 修正括号前后的空格
+      .replace(/\s*([(\[{])\s*/g, ' $1')
+      .replace(/\s*([)\]}])\s*/g, '$1 ')
+      // 删除中文之间的空格
+      .replace(/([\u4e00-\u9fa5])\s+([\u4e00-\u9fa5])/g, '$1$2');
+  }
+
+  // 标点优化
+  static optimizePunctuation(text, lang) {
+    if (lang === 'zh') {
+      return text
+        // 将英文标点转换为中文标点
+        .replace(/,/g, '，')
+        .replace(/\./g, '。')
+        .replace(/\?/g, '？')
+        .replace(/!/g, '！')
+        .replace(/;/g, '；')
+        .replace(/:/g, '：')
+        // 修正引号
+        .replace(/"/g, '\u201c')  // 替换成左双引号
+        .replace(/"/g, '\u201d')  // 替换成右双引号
+        .replace(/'/g, '\u2018')  // 替换成左单引号
+        .replace(/'/g, '\u2019')  // 替换成右单引号
+        // 修正破折号和省略号
+        .replace(/--/g, '—')
+        .replace(/\.\.\./g, '…');
+    } else {
+      return text
+        // 将中文标点转换为英文标点
+        .replace(/，/g, ', ')
+        .replace(/。/g, '. ')
+        .replace(/？/g, '? ')
+        .replace(/！/g, '! ')
+        .replace(/；/g, '; ')
+        .replace(/：/g, ': ')
+        // 修正引号
+        .replace(/[""]/g, '"')
+        .replace(/['']/g, "'")
+        // 修正破折号和省略号
+        .replace(/—/g, ' - ')
+        .replace(/…/g, '...');
+    }
+  }
+
+  // 计算建议行高
+  static calculateLineHeight(fontSize) {
+    // 根据字号计算黄金比例的行高
+    return Math.round(fontSize * 1.5);
+  }
+
+  // 主优化函数
+  static async optimizeTextNode(node) {
+    if (node.type !== 'TEXT') return;
+  
+    try {
+      // 首先加载当前文本使用的字体
+      await figma.loadFontAsync(node.fontName);
+  
+      // 保存原始文本以便比较
+      const originalText = node.characters;
+      
+      // 检测主要语言
+      const mainLang = this.detectMainLanguage(originalText);
+      
+      // 应用文本优化
+      let optimizedText = originalText;
+      optimizedText = this.optimizeSpacing(optimizedText);
+      optimizedText = this.optimizePunctuation(optimizedText, mainLang);
+  
+      // 仅在文本确实改变时更新
+      if (optimizedText !== originalText) {
+        node.characters = optimizedText;
+      }
+  
+      // 优化行高
+      if (node.fontSize) {
+        const suggestedLineHeight = this.calculateLineHeight(node.fontSize);
+        node.lineHeight = { value: suggestedLineHeight, unit: "PIXELS" };
+      }
+    } catch (error) {
+      console.error('处理文本节点时出错：', error);
+      throw error;
+    }
+  }
+  
+  // 修改 processNodes 方法为异步方法
+  static async processNodes(nodes) {
+    for (const node of nodes) {
+      if (node.type === 'TEXT') {
+        await this.optimizeTextNode(node);
+      }
+      // 递归处理子节点
+      if ('children' in node) {
+        await this.processNodes(node.children);
+      }
+    }
+  }
+}
 
 // 加载所有可用的字体并发送到前端 UI
 figma.listAvailableFontsAsync().then((fonts) => {
   figma.ui.postMessage({ type: 'fonts-loaded', fonts });
 
   // 确保在 UI 加载后立即检查当前的选中状态
-  checkSelectionStyles(); // 调用检查样式的函数
+  checkSelectionStyles();
 });
 
 // 使用 `figma.ui.on` 事件监听器替代 `window.onmessage`
@@ -26,28 +145,6 @@ figma.ui.on('message', (pluginMessage) => {
     updateUIField('english-line-height', lineHeight, 'input');
   }
 });
-
-// 新增的更新 UI 函数
-function updateUIField(elementId, value, fieldType) {
-  const element = document.getElementById(elementId);
-  if (element) {
-    if (fieldType === 'select') {
-      // 如果是 "mix"，则创建一个临时选项来显示 "mix"
-      if (value === 'mix') {
-        const mixOption = document.createElement('option');
-        mixOption.value = 'mix';
-        mixOption.text = 'mix';
-        mixOption.selected = true;
-        element.appendChild(mixOption);
-      } else {
-        element.value = (value !== undefined ? value : '');
-      }
-    } else if (fieldType === 'input') {
-      // 对于 input 元素直接设置值
-      element.value = (value === 'mix') ? 'mix' : (value !== undefined ? value : '');
-    }
-  }
-}
 
 // 检查选中的文本节点的样式是否混合
 function checkSelectionStyles() {
@@ -102,6 +199,24 @@ function checkSelectionStyles() {
 
 // 处理 UI 消息的逻辑
 figma.ui.on('message', async (msg) => {
+  if (msg.type === 'optimize-text') {
+    const selectedNodes = figma.currentPage.selection;
+    
+    if (selectedNodes.length === 0) {
+      figma.notify('请选择需要优化的图层');
+      return;
+    }
+
+    try {
+      await TextOptimizer.processNodes(selectedNodes);
+      figma.notify('文本格式已优化完成！');
+    } catch (error) {
+      console.error('优化过程出错：', error);
+      figma.notify('优化过程中出现错误：' + error.message);
+    }
+    return;
+  }
+
   const selectedNodes = figma.currentPage.selection;
 
   if (selectedNodes.length === 0) {

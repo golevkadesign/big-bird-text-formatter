@@ -11,7 +11,7 @@
       padding: 16px;
       display: flex;
       flex-direction: column;
-      background-color: #f9fafb; /* Tailwind-like light gray */
+      background-color: #f9fafb;
       height: 100vh;
       box-sizing: border-box;
     }
@@ -27,13 +27,13 @@
       margin: 0 4px;
       cursor: pointer;
       font-size: 14px;
-      background-color: #e5e7eb; /* Tailwind-like gray */
+      background-color: #e5e7eb;
       border-radius: 8px;
       transition: background-color 0.2s ease-in-out;
     }
 
     .tab.active {
-      background-color: #3b82f6; /* Tailwind-like blue */
+      background-color: #3b82f6;
       color: white;
     }
 
@@ -52,14 +52,14 @@
 
     .panel {
       display: grid;
-      grid-template-columns: 1fr 1fr; /* 两列布局 */
+      grid-template-columns: 1fr 1fr;
       gap: 12px;
     }
 
     label {
       font-size: 12px;
       font-weight: 600;
-      color: #4b5563; /* Tailwind-like gray */
+      color: #4b5563;
       margin-bottom: 4px;
       display: block;
     }
@@ -68,20 +68,20 @@
       width: 100%;
       padding: 6px;
       margin-bottom: 8px;
-      border: 1px solid #d1d5db; /* Tailwind-like border color */
+      border: 1px solid #d1d5db;
       border-radius: 4px;
       font-size: 14px;
       box-sizing: border-box;
-      appearance: none; /* 隐藏原生箭头图标 */
+      appearance: none;
       background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="%234b5563"%3E%3Cpath stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"%3E%3C/path%3E%3C/svg%3E');
       background-repeat: no-repeat;
-      background-position: right 10px center; /* 调整箭头与边缘的距离 */
+      background-position: right 10px center;
       background-size: 16px 16px;
     }
 
     button {
       font-size: 14px;
-      background-color: #3b82f6; /* Tailwind-like blue */
+      background-color: #3b82f6;
       color: white;
       border: none;
       padding: 10px;
@@ -92,18 +92,44 @@
     }
 
     button:hover {
-      background-color: #2563eb; /* Darker Tailwind-like blue */
+      background-color: #2563eb;
     }
 
     button:active {
-      background-color: #1e40af; /* Even darker Tailwind-like blue */
+      background-color: #1e40af;
     }
 
     .footer {
       text-align: center;
       font-size: 12px;
-      color: #9ca3af; /* Tailwind-like gray */
+      color: #9ca3af;
       margin-top: 8px;
+    }
+
+    .action-card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .feature-list {
+      margin: 8px 0;
+      padding-left: 20px;
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .feature-list li {
+      margin-bottom: 4px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 8px;
     }
   </style>
 </head>
@@ -112,6 +138,7 @@
   <div class="tabs">
     <div class="tab active" data-target="chinese-panel">Chinese</div>
     <div class="tab" data-target="english-panel">English</div>
+    <div class="tab" data-target="quick-actions">Quick Actions</div>
   </div>
 
   <!-- Chinese Text Properties Panel -->
@@ -216,6 +243,22 @@
     <button id="apply-english">Apply to English Text</button>
   </div>
 
+  <!-- Quick Actions Panel -->
+  <div id="quick-actions" class="content">
+    <div class="action-card">
+      <div class="section-title">Text Format Optimizer</div>
+      <ul class="feature-list">
+        <li>Automatically adjusts spacing between Chinese and English text</li>
+        <li>Standardizes punctuation marks based on language context</li>
+        <li>Optimizes line height for better readability</li>
+        <li>Applies to all text layers in selection</li>
+      </ul>
+      <button id="optimize-text" class="primary-button">
+        One-Click Optimize
+      </button>
+    </div>
+  </div>
+
   <div class="footer">Big Bird Text Formatter v1.2.0</div>
 
   <script>
@@ -231,28 +274,28 @@
       });
     });
 
-    // 接收 Figma 插件的消息
+    // Handle Figma plugin messages
     window.onmessage = (event) => {
       const pluginMessage = event.data.pluginMessage;
 
       if (pluginMessage.type === 'fonts-loaded') {
         const fonts = pluginMessage.fonts;
 
-        // 将字体家族及其字重存储在 fontsByFamily 对象中
+        // Store font families and weights
         fontsByFamily = fonts.reduce((acc, font) => {
           const family = font.fontName.family;
           const style = font.fontName.style;
           if (!acc[family]) {
             acc[family] = [];
           }
-          acc[family].push(style);  // 添加字体字重
+          acc[family].push(style);
           return acc;
         }, {});
 
         const chineseFontSelect = document.getElementById('chinese-font');
         const englishFontSelect = document.getElementById('english-font');
 
-        // 显示字体家族选项
+        // Display font family options
         Object.keys(fontsByFamily).forEach(font => {
           const chineseOption = document.createElement('option');
           const englishOption = document.createElement('option');
@@ -264,10 +307,10 @@
           englishFontSelect.appendChild(englishOption);
         });
 
-        // 更新字重选项
+        // Update font weights
         const updateFontWeights = (fontFamily, weightSelectId) => {
           const fontWeightSelect = document.getElementById(weightSelectId);
-          fontWeightSelect.innerHTML = '';  // 清空字重选项
+          fontWeightSelect.innerHTML = '';
           fontsByFamily[fontFamily].forEach(weight => {
             const option = document.createElement('option');
             option.value = weight;
@@ -276,12 +319,11 @@
           });
         };
 
-        // 中文字体变化时更新字重
+        // Handle font changes
         chineseFontSelect.onchange = (e) => {
           updateFontWeights(e.target.value, 'chinese-font-weight');
         };
 
-        // 英文字体变化时更新字重
         englishFontSelect.onchange = (e) => {
           updateFontWeights(e.target.value, 'english-font-weight');
         };
@@ -290,13 +332,13 @@
       if (pluginMessage.type === 'selection-changed') {
         const { fontSize, fontWeight, letterSpacing, lineHeight } = pluginMessage;
 
-        // 如果是混合值则显示为 "mix"
+        // Update Chinese text fields
         document.getElementById('chinese-font-size').value = fontSize === 'mix' ? 'mix' : fontSize;
         document.getElementById('chinese-font-weight').value = fontWeight === 'mix' ? 'mix' : fontWeight;
         document.getElementById('chinese-letter-spacing').value = letterSpacing === 'mix' ? 'mix' : letterSpacing;
         document.getElementById('chinese-line-height').value = lineHeight === 'mix' ? 'mix' : lineHeight;
 
-        // 英文文本的相同处理
+        // Update English text fields
         document.getElementById('english-font-size').value = fontSize === 'mix' ? 'mix' : fontSize;
         document.getElementById('english-font-weight').value = fontWeight === 'mix' ? 'mix' : fontWeight;
         document.getElementById('english-letter-spacing').value = letterSpacing === 'mix' ? 'mix' : letterSpacing;
@@ -309,7 +351,7 @@
       return value === 'mix' ? currentValue : value;
     };
 
-    // 应用中文文本样式
+    // Apply Chinese text styles
     document.getElementById('apply-chinese').onclick = () => {
       const styles = {
         fontFamily: document.getElementById('chinese-font').value,
@@ -324,7 +366,7 @@
       parent.postMessage({ pluginMessage: { type: 'apply-chinese-styles', styles } }, '*');
     };
 
-    // 应用英文文本样式
+    // Apply English text styles
     document.getElementById('apply-english').onclick = () => {
       const styles = {
         fontFamily: document.getElementById('english-font').value,
@@ -337,6 +379,11 @@
         textDecoration: document.getElementById('english-text-decoration').value
       };
       parent.postMessage({ pluginMessage: { type: 'apply-english-styles', styles } }, '*');
+    };
+
+    // Add one-click optimization handler
+    document.getElementById('optimize-text').onclick = () => {
+      parent.postMessage({ pluginMessage: { type: 'optimize-text' } }, '*');
     };
   </script>
 </body>
