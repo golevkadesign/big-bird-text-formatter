@@ -467,9 +467,17 @@
       document.querySelectorAll('label').forEach(label => {
         const forAttr = label.getAttribute('for');
         if (forAttr) {
-          const key = forAttr.split('-')[1];
-          if (i18n[lang].labels[key]) {
-            label.textContent = i18n[lang].labels[key];
+          // 原来的代码有问题，我们调整处理 id 的逻辑
+          const parts = forAttr.split('-');
+          if (parts.length >= 2) {
+            // 把剩余部分转换成驼峰式命名
+            const key = parts.slice(1)
+              .map((part, index) => index > 0 ? part.charAt(0).toUpperCase() + part.slice(1) : part)
+              .join('');
+            
+            if (i18n[lang].labels[key]) {
+              label.textContent = i18n[lang].labels[key];
+            }
           }
         }
       });
