@@ -72,18 +72,30 @@ class TextOptimizer {
       // 加载当前文本使用的字体
       await figma.loadFontAsync(node.fontName);
 
-      const originalText = node.characters;
-      const mainLang = this.detectMainLanguage(originalText);
-      
-      let optimizedText = originalText;
-      optimizedText = this.optimizeSpacing(optimizedText);
-      optimizedText = this.optimizePunctuation(optimizedText, mainLang);
+      // 保存原始的换行和颜色信息
+      const originalCharacters = node.characters;
+      const originalFills = node.fills;      // 保存颜色信息
+      const segments = originalCharacters.split('\n');  // 保留换行信息
 
-      if (optimizedText !== originalText) {
+      // 分别处理每一行，然后再用换行符重新连接
+      const optimizedSegments = segments.map(segment => {
+        const mainLang = this.detectMainLanguage(segment);
+        let optimizedText = segment;
+        optimizedText = this.optimizeSpacing(optimizedText);
+        optimizedText = this.optimizePunctuation(optimizedText, mainLang);
+        return optimizedText;
+      });
+
+      // 重新组合文本，保持原有的换行
+      const optimizedText = optimizedSegments.join('\n');
+
+      if (optimizedText !== originalCharacters) {
         node.characters = optimizedText;
+        node.fills = originalFills;  // 恢复原有颜色
       }
 
-      if (node.fontSize) {
+      // 仅在没有自定义行高时优化行高
+      if (node.fontSize && !node.lineHeight) {
         const suggestedLineHeight = this.calculateLineHeight(node.fontSize);
         node.lineHeight = { value: suggestedLineHeight, unit: "PIXELS" };
       }
