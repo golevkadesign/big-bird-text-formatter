@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Big Bird Text Formatter</title>
   <style>
     /* 基础样式保持不变 */
     body {
@@ -178,6 +177,54 @@
       color: #374151;
       margin-bottom: 8px;
     }
+
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      text-align: center;
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 8px;
+      padding: 0 8px;
+    }
+
+    .footer a {
+      color: #9ca3af;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer a:hover {
+      color: #6b7280;
+    }
+
+    .language-switch {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .lang-btn {
+      background: none;
+      border: none;
+      padding: 2px 4px;
+      font-size: 12px;
+      color: #9ca3af;
+      cursor: pointer;
+      transition: color 0.2s;
+      margin: 0;
+      width: auto;
+    }
+
+    .lang-btn:hover {
+      color: #6b7280;
+    }
+
+    .lang-btn.active {
+      color: #3b82f6;
+      font-weight: 500;
+    }
   </style>
 </head>
 <body>
@@ -306,9 +353,172 @@
     </div>
   </div>
 
-  <div class="footer">Big Bird Text Formatter v1.2.0</div>
+  <div class="footer">
+    <a href="https://github.com/golevkadesign/big-bird-text-formatter" target="_blank">click it 👉 v1.4 - by golevkadesign</a>
+    <div class="language-switch">
+      <button class="lang-btn" data-lang="en">EN</button>
+      <span>/</span>
+      <button class="lang-btn" data-lang="zh">中</button>
+    </div>
+  </div>
 
   <script>
+    // 语言设置
+    const i18n = {
+      en: {
+        tabs: {
+          chinese: "Chinese",
+          english: "English",
+          quickActions: "Quick Actions"
+        },
+        labels: {
+          font: "Font",
+          fontWeight: "Font Weight",
+          fontSize: "Font Size",
+          letterSpacing: "Letter Spacing",
+          lineHeight: "Line Height",
+          paragraphSpacing: "Paragraph Spacing",
+          textCase: "Text Case",
+          textDecoration: "Text Decoration"
+        },
+        textCase: {
+          original: "Original",
+          upper: "Uppercase",
+          lower: "Lowercase",
+          title: "Title Case"
+        },
+        textDecoration: {
+          none: "None",
+          underline: "Underline",
+          strikethrough: "Strikethrough"
+        },
+        buttons: {
+          applyChinese: "Apply to Chinese Text",
+          applyEnglish: "Apply to English Text",
+          optimize: "One-Click Optimize"
+        },
+        quickActions: {
+          title: "Text Format Optimizer",
+          features: [
+            "Automatically adjusts spacing between Chinese and English text",
+            "Standardizes punctuation marks based on language context",
+            "Optimizes line height for better readability",
+            "Applies to all text layers in selection"
+          ]
+        }
+      },
+      zh: {
+        tabs: {
+          chinese: "中文",
+          english: "英文",
+          quickActions: "快捷操作"
+        },
+        labels: {
+          font: "字体",
+          fontWeight: "字重",
+          fontSize: "字号",
+          letterSpacing: "字间距",
+          lineHeight: "行高",
+          paragraphSpacing: "段落间距",
+          textCase: "大小写",
+          textDecoration: "装饰"
+        },
+        textCase: {
+          original: "保持原样",
+          upper: "全大写",
+          lower: "全小写",
+          title: "首字母大写"
+        },
+        textDecoration: {
+          none: "无",
+          underline: "下划线",
+          strikethrough: "删除线"
+        },
+        buttons: {
+          applyChinese: "应用到中文",
+          applyEnglish: "应用到英文",
+          optimize: "一键优化"
+        },
+        quickActions: {
+          title: "文本格式优化器",
+          features: [
+            "自动调整中英文之间的空格",
+            "根据语言环境规范化标点符号",
+            "优化行高以提升可读性",
+            "批量处理所选图层中的文本"
+          ]
+        }
+      }
+    };
+
+    let currentLang = 'en'; // 默认语言
+
+    // 更新界面语言
+    function updateLanguage(lang) {
+      currentLang = lang;
+
+      // 更新标签页
+      document.querySelectorAll('.tab').forEach(tab => {
+        const key = tab.getAttribute('data-target').replace('-panel', '');
+        tab.textContent = i18n[lang].tabs[key];
+      });
+
+      // 更新标签
+      document.querySelectorAll('label').forEach(label => {
+        const forAttr = label.getAttribute('for');
+        if (forAttr) {
+          const key = forAttr.split('-')[1];
+          if (i18n[lang].labels[key]) {
+            label.textContent = i18n[lang].labels[key];
+          }
+        }
+      });
+
+      // 更新下拉菜单选项
+      document.querySelectorAll('select[id$="-text-case"] option').forEach(option => {
+        const key = option.value.toLowerCase();
+        if (i18n[lang].textCase[key]) {
+          option.textContent = i18n[lang].textCase[key];
+        }
+      });
+
+      document.querySelectorAll('select[id$="-text-decoration"] option').forEach(option => {
+        const key = option.value.toLowerCase();
+        if (i18n[lang].textDecoration[key]) {
+          option.textContent = i18n[lang].textDecoration[key];
+        }
+      });
+
+      // 更新按钮文本
+      document.getElementById('apply-chinese').textContent = i18n[lang].buttons.applyChinese;
+      document.getElementById('apply-english').textContent = i18n[lang].buttons.applyEnglish;
+      document.getElementById('optimize-text').textContent = i18n[lang].buttons.optimize;
+
+      // 更新快捷操作面板
+      const quickActionsSection = document.querySelector('#quick-actions .section-title');
+      if (quickActionsSection) {
+        quickActionsSection.textContent = i18n[lang].quickActions.title;
+      }
+
+      const featureList = document.querySelector('#quick-actions .feature-list');
+      if (featureList) {
+        featureList.innerHTML = i18n[lang].quickActions.features.map(feature => 
+          `<li>${feature}</li>`
+        ).join('');
+      }
+
+      // 更新Tab本身的文本
+      const quickActionsTab = document.querySelector('.tab[data-target="quick-actions"]');
+      if (quickActionsTab) {
+        quickActionsTab.textContent = i18n[lang].tabs.quickActions;
+      }
+
+      // 更新语言按钮状态
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
+      });
+    }
+
     // Tab Switching Logic
     document.querySelectorAll('.tab').forEach(tab => {
       tab.addEventListener('click', () => {
@@ -323,9 +533,8 @@
 
     // 混合状态处理函数
     function handleMixedState(element, value) {
-      // 先重置状态
-      element.classList.remove('mixed-value');
-      element.classList.remove('empty-state');
+      // 先清空现有值
+      element.value = '';
       
       if (value === 'mix') {
         element.classList.add('mixed-value');
@@ -371,6 +580,7 @@
     window.onmessage = (event) => {
       const pluginMessage = event.data.pluginMessage;
       log('Received message:', pluginMessage.type);
+
       if (pluginMessage.type === 'reset-fields') {
         // 重置所有字段
         ['chinese', 'english'].forEach(prefix => {
@@ -385,6 +595,7 @@
         });
         return;
       }
+
       if (pluginMessage.type === 'fonts-loaded') {
         const fonts = pluginMessage.fonts;
         log('Fonts loaded:', fonts.length);
@@ -497,6 +708,17 @@
       log('Optimizing text');
       parent.postMessage({ pluginMessage: { type: 'optimize-text' } }, '*');
     };
+
+    // 绑定语言切换事件
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const lang = btn.getAttribute('data-lang');
+        updateLanguage(lang);
+      });
+    });
+
+    // 初始化语言
+    updateLanguage(currentLang);
   </script>
 </body>
 </html>
