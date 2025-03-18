@@ -4,7 +4,7 @@
 
 **Big Bird Text Formatter** is a Figma plugin designed to streamline the process of text formatting for multilingual content. It allows users to easily apply text styles to Chinese and English texts separately, ensuring a consistent and efficient design workflow. The plugin also provides one-click optimization for mixed-language text formatting, making it perfect for designers working with bilingual content.
 
-**大鸟文本格式化插件**是一个为多语言内容设计的 Figma 插件。用户可以分别为中文和英文文本应用文本样式，从而简化文本格式化流程，确保设计工作流的一致性和高效性。插件还提供了中英文混排文本的一键优化功能，是处理双语内容的设计师的理想工具。
+**中英文大鸟转转转**是一个为多语言内容设计的 Figma 插件。用户可以分别为中文和英文文本应用文本样式，从而简化文本格式化流程，确保设计工作流的一致性和高效性。插件还提供了中英文混排文本的一键优化功能，是处理双语内容的设计师的理想工具。
 
 ## Features | 功能特点
 
